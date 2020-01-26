@@ -1,8 +1,18 @@
 #include <iostream>
 
+#include <cmath>
+#include <cfloat>
+
 #include "CL/sycl.hpp"
 
 namespace sycl = cl::sycl;
+
+const float xval(1);
+const float yval(2);
+const float zval(2);
+const float aval(3);
+
+const float correct = (zval + aval * xval + yval);
 
 int main(int argc, char * argv[])
 {
@@ -14,17 +24,16 @@ int main(int argc, char * argv[])
     size_t length = std::atoi(argv[1]);
     std::cout << "SAXPY with " << length << " elements" << std::endl;
 
-    std::vector<float> h_X(length,1);
-    std::vector<float> h_Y(length,2);
-    std::vector<float> h_Z(length,2);
+    // host data
+    std::vector<float> h_X(length,xval);
+    std::vector<float> h_Y(length,yval);
+    std::vector<float> h_Z(length,zval);
 
     try {
 
         sycl::queue q(sycl::default_selector{});
 
-        float A(3);
-
-        auto ctx = q.get_context();
+        const float A(aval);
 
         sycl::buffer<float,1> d_X { h_X.data(), sycl::range<1>(h_X.size()) };
         sycl::buffer<float,1> d_Y { h_Y.data(), sycl::range<1>(h_Y.size()) };
@@ -47,24 +56,22 @@ int main(int argc, char * argv[])
         std::cout << e.what() << std::endl;
         return 1;
     }
-    catch (std::exception & e) {
-        std::cout << e.what() << std::endl;
-        return 1;
-    }
-    catch (const char * e) {
-        std::cout << e << std::endl;
-        return 1;
-    }
 
+    // check for correctness
     size_t errors(0);
     for (size_t i=0; i<length; ++i) {
-        //std::cout << h_Z[i] << "\n";
-        errors += (h_Z[i] != 7.0f);
+        if ( std::abs(h_Z[i] - correct) > FLT_MIN) {
+            ++errors;
+        }
     }
     if (errors) {
         std::cerr << "There were " << errors << " errors!" << std::endl;
+        for (size_t i=0; i<length; ++i) {
+            std::cout << i << "," << h_Z[i] << "\n";
+        }
         return 1;
     }
+    std::cout << "Program completed without error." << std::endl;
 
     return 0;
 }
