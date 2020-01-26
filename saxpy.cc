@@ -45,7 +45,7 @@ int main(int argc, char * argv[])
             auto Y = d_Y.template get_access<sycl::access::mode::read>(h);
             auto Z = d_Z.template get_access<sycl::access::mode::read_write>(h);
 
-            h.parallel_for<class nstream>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
+            h.parallel_for<class axpy>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
                 const int i = it[0];
                 Z[i] += A * X[i] + Y[i];
             });
