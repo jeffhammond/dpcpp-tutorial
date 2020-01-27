@@ -98,4 +98,22 @@ That will be covered later.
 
 ## Structure of SYCL program
 
+One of the challenges of heterogeneous programming is that there are multiple types of processing elements and often different memory types.  These things make compilers and runtimes more complicated.
+
+The SYCL programming model embraces heterogeneous execution, although at a much higher level than OpenCL.  Not everything is explicit either - unlike other popular GPU programming models, SYCL kernels can be inlined into the host program flow, which improves readability.
+
+Whenever we want to compute on a device, we need to create a work queue:
+```c++
+sycl::queue q(sycl::default_selector{});
+```
+The default selector favors a GPU if present and a CPU otherwise.
+One can create queues associated with specific device types using the follow:
+```c++
+sycl::queue q(sycl::host_selector{});        // run on the CPU without a runtime (e.g. no OpenCL)
+sycl::queue q(sycl::cpu_selector{});         // run on the CPU with a runtime (e.g. OpenCL)
+sycl::queue q(sycl::gpu_selector{});         // run on the GPU
+sycl::queue q(sycl::accelerator_selector{}); // run on an FPGA or other acclerator
+```
+The host and CPU selectors may lead to significantly different results, even though they target the same hardware, because the host selector might use a sequential implementation optimized for debugging, while the CPU selector uses the OpenCL runtime and runs across all the cores.  Furthermore, the OpenCL JiT compiler might generate different code because it's using a different compiler altogether.  Don't assume that just because the host is a CPU, that host and CPU mean the same thing in SYCL!
+
 The full program is included in the repo: [saxpy.cc](saxpy.cc).
