@@ -24,28 +24,26 @@ int main(int argc, char * argv[])
     size_t length = std::atoi(argv[1]);
     std::cout << "SAXPY with " << length << " elements" << std::endl;
 
-    // host data
-    std::vector<float> h_X(length,xval);
-    std::vector<float> h_Y(length,yval);
-    std::vector<float> h_Z(length,zval);
+    sycl::queue q(sycl::default_selector{});
+    auto ctx = q.get_context();
+    auto dev = q.get_device();
+
+    float * X = static_cast<float*>(sycl::malloc_shared(length * sizeof(float), dev, ctx));
+    float * Y = static_cast<float*>(sycl::malloc_shared(length * sizeof(float), dev, ctx));
+    float * Z = static_cast<float*>(sycl::malloc_shared(length * sizeof(float), dev, ctx));
+
+    for (size_t i=0; i<length; i++) {
+      X[i] = xval;
+      Y[i] = yval;
+      Z[i] = zval;
+    }
 
     try {
 
-        sycl::queue q(sycl::default_selector{});
-
         const float A(aval);
 
-        sycl::buffer<float,1> d_X { h_X.data(), sycl::range<1>(h_X.size()) };
-        sycl::buffer<float,1> d_Y { h_Y.data(), sycl::range<1>(h_Y.size()) };
-        sycl::buffer<float,1> d_Z { h_Z.data(), sycl::range<1>(h_Z.size()) };
-
         q.submit([&](sycl::handler& h) {
-
-            auto X = d_X.template get_access<sycl::access::mode::read>(h);
-            auto Y = d_Y.template get_access<sycl::access::mode::read>(h);
-            auto Z = d_Z.template get_access<sycl::access::mode::read_write>(h);
-
-            h.parallel_for<class axpy>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
+            h.parallel_for<class saxpy>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
                 const int i = it[0];
                 Z[i] += A * X[i] + Y[i];
             });
@@ -57,20 +55,26 @@ int main(int argc, char * argv[])
         return 1;
     }
 
+    sycl::free(X, ctx);
+    sycl::free(Y, ctx);
+
     // check for correctness
     size_t errors(0);
     for (size_t i=0; i<length; ++i) {
-        if ( std::abs(h_Z[i] - correct) > FLT_MIN) {
+        if ( std::abs(Z[i] - correct) > FLT_MIN) {
             ++errors;
         }
     }
     if (errors) {
         std::cerr << "There were " << errors << " errors!" << std::endl;
         for (size_t i=0; i<length; ++i) {
-            std::cout << i << "," << h_Z[i] << "\n";
+            std::cout << i << "," << Z[i] << "\n";
         }
         return 1;
     }
+
+    sycl::free(Z, ctx);
+
     std::cout << "Program completed without error." << std::endl;
 
     return 0;
