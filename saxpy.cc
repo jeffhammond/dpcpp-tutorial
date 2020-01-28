@@ -41,9 +41,9 @@ int main(int argc, char * argv[])
 
         q.submit([&](sycl::handler& h) {
 
-            auto X = d_X.template get_access<sycl::access::mode::read>(h);
-            auto Y = d_Y.template get_access<sycl::access::mode::read>(h);
-            auto Z = d_Z.template get_access<sycl::access::mode::read_write>(h);
+            auto X = d_X.get_access<sycl::access::mode::read>(h);
+            auto Y = d_Y.get_access<sycl::access::mode::read>(h);
+            auto Z = d_Z.get_access<sycl::access::mode::read_write>(h);
 
             h.parallel_for<class axpy>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
                 const int i = it[0];
