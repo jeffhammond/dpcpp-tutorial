@@ -96,7 +96,7 @@ In many SYCL compilers, such as Intel DPC++, this isn't necessary and one can te
 We won't try to explain what the `h` in `h.parallel_for` is right now.
 That will be covered later.
 
-## Structure of SYCL program
+## SYCL queues
 
 One of the challenges of heterogeneous programming is that there are multiple types of processing elements and often different memory types.  These things make compilers and runtimes more complicated.
 
@@ -116,4 +116,106 @@ sycl::queue q(sycl::accelerator_selector{}); // run on an FPGA or other acclerat
 ```
 The host and CPU selectors may lead to significantly different results, even though they target the same hardware, because the host selector might use a sequential implementation optimized for debugging, while the CPU selector uses the OpenCL runtime and runs across all the cores.  Furthermore, the OpenCL JiT compiler might generate different code because it's using a different compiler altogether.  Don't assume that just because the host is a CPU, that host and CPU mean the same thing in SYCL!
 
+## Managing data in SYCL using `buffers`
+
+The canonical way to manage data in SYCL is with buffers.
+A SYCL buffer is an opaque container.
+This is an elegant design, but some applications would like pointers, which are provided by the USM extension discussed later.
+```c++
+// T is a data type, e.g. float
+std::vector<T> h_X(length,xval);
+sycl::buffer<T,1> d_X { h_X.data(), sycl::range<1>(h_X.size()) };
+```
+In the previous example, the user allocates a C++ container on the host and then hands it over to SYCL.
+Until the destructor of the SYCL buffer is invoked, the user cannot access the data through a non-SYCL mechanism.
+
+SYCL accessors are the important aspect of SYCL data management with buffers, which are explained below.
+
+## Controlling device execution
+
+Because device code may require a different compiler or code generation mechanism from the host, it is necessary to clearly identify sections of device code.
+Below we see how this looks in SYCL 1.2.1.
+We use the `submit` method to enqueue work to the device queue, `q`.
+This method returns an opaque handler, against which we execute kernels, in this case via `parallel_for`.
+```
+q.submit([&](sycl::handler& h) {
+    ...
+    h.parallel_for<class nstream>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
+        ....
+    });
+});
+q.wait();
+```
+We can synchronize device execution using the `wait()` method.
+There are finer grain methods for synchronizing device execution, but we start with simplest one, which is a heavy hammer.
+
+Some users may find the above a bit verbose, particularly compared to models like Kokkos.
+The Intel DPC++ compiler supports a terse syntax, which will be covered below.
+
+## Compute kernels and buffers
+
+SYCL accessors are the final piece of the puzzle in our first SYCL program.
+Accessors may be unfamiliar to GPU programmers, but have a number of nice properties relative to other methods.
+While SYCL allows the programmer to move data explicitly using e.g. the `copy()` method,
+the accessor methods do not require this, because they generate a dataflow graph that the compiler and runtime
+can use to move data at the right time.
+This is particularly effective when multiple kernels are invoked in sequence;
+in this case, the SYCL implementation will deduce that data is reused and not copy it back to the host unnecessarily.
+Furthermore, data movement can be scheduled asynchronously, i.e. overlapped with device execution.
+While expert GPU programmers can do this manually, we often find that SYCL accessors lead to better
+performance than OpenCL programs where programmers must move data explicitly.
+```c++
+q.submit([&](sycl::handler& h) {
+
+    auto X = d_X.template get_access<sycl::access::mode::read>(h);
+    auto Y = d_Y.template get_access<sycl::access::mode::read>(h);
+    auto Z = d_Z.template get_access<sycl::access::mode::read_write>(h);
+
+    h.parallel_for<class nstream>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
+        ...
+    });
+});
+```
+Because programming models that assume pointers are handles to memory have a hard time with SYCL accessors,
+the USM extension makes accessors unnecessary.
+This places a higher burden on the programmer, but is necessary for compatibility with legacy code.
+
+## Review of our first SYCL program
+
+Below we include all of the components of our SYCL saxpy program that we just described.
 The full program is included in the repo: [saxpy.cc](saxpy.cc).
+```c++
+    std::vector<float> h_X(length,xval);
+    std::vector<float> h_Y(length,yval);
+    std::vector<float> h_Z(length,zval);
+
+    try {
+
+        sycl::queue q(sycl::default_selector{});
+
+        const float A(aval);
+
+        sycl::buffer<float,1> d_X { h_X.data(), sycl::range<1>(h_X.size()) };
+        sycl::buffer<float,1> d_Y { h_Y.data(), sycl::range<1>(h_Y.size()) };
+        sycl::buffer<float,1> d_Z { h_Z.data(), sycl::range<1>(h_Z.size()) };
+
+        q.submit([&](sycl::handler& h) {
+
+            auto X = d_X.template get_access<sycl::access::mode::read>(h);
+            auto Y = d_Y.template get_access<sycl::access::mode::read>(h);
+            auto Z = d_Z.template get_access<sycl::access::mode::read_write>(h);
+
+            h.parallel_for<class nstream>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
+                const int i = it[0];
+                Z[i] += A * X[i] + Y[i];
+            });
+          });
+          q.wait();
+    }
+    catch (sycl::exception & e) {
+        std::cout << e.what() << std::endl;
+        return 1;
+    }
+```
+
+
