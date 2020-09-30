@@ -17,20 +17,18 @@ const float correct = (zval + aval * xval + yval);
 int main(int argc, char * argv[])
 {
     if (argc < 2) {
-        std::cerr << "Usage: saxpy.x <vector length>" << std::endl;
+        std::cerr << "Usage: saxpy-usm.x <vector length>" << std::endl;
         return argc;
     }
 
     size_t length = std::atoi(argv[1]);
-    std::cout << "SAXPY with " << length << " elements" << std::endl;
+    std::cout << "SAXPY USM with " << length << " elements" << std::endl;
 
     sycl::queue q(sycl::default_selector{});
-    auto ctx = q.get_context();
-    auto dev = q.get_device();
 
-    float * X = static_cast<float*>(sycl::malloc_shared(length * sizeof(float), dev, ctx));
-    float * Y = static_cast<float*>(sycl::malloc_shared(length * sizeof(float), dev, ctx));
-    float * Z = static_cast<float*>(sycl::malloc_shared(length * sizeof(float), dev, ctx));
+    auto X = sycl::malloc_shared<float>(length, q);
+    auto Y = sycl::malloc_shared<float>(length, q);
+    auto Z = sycl::malloc_shared<float>(length, q);
 
     for (size_t i=0; i<length; i++) {
       X[i] = xval;
@@ -55,8 +53,8 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    sycl::free(X, ctx);
-    sycl::free(Y, ctx);
+    sycl::free(X, q);
+    sycl::free(Y, q);
 
     // check for correctness
     size_t errors(0);
@@ -73,7 +71,7 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    sycl::free(Z, ctx);
+    sycl::free(Z, q);
 
     std::cout << "Program completed without error." << std::endl;
 
