@@ -29,9 +29,9 @@ int main(int argc, char * argv[])
     std::vector<float> h_Y(length,yval);
     std::vector<float> h_Z(length,zval);
 
-    try {
+    sycl::queue q(sycl::default_selector{});
 
-        sycl::queue q(sycl::default_selector{});
+    try {
 
         const float A(aval);
 
@@ -41,12 +41,17 @@ int main(int argc, char * argv[])
 
         q.submit([&](sycl::handler& h) {
 
+#if 0
             auto X = d_X.get_access<sycl::access::mode::read>(h);
             auto Y = d_Y.get_access<sycl::access::mode::read>(h);
             auto Z = d_Z.get_access<sycl::access::mode::read_write>(h);
+#else
+            sycl::accessor X(d_X,h,sycl::read_only);
+            sycl::accessor Y(d_Y,h,sycl::read_only);
+            sycl::accessor Z(d_Z,h,sycl::read_write);
+#endif
 
-            h.parallel_for<class axpy>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
-                const int i = it[0];
+            h.parallel_for<class axpy>( sycl::range<1>{length}, [=] (sycl::id<1> i) {
                 Z[i] += A * X[i] + Y[i];
             });
         });
