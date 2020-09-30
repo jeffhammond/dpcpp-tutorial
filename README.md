@@ -35,7 +35,9 @@ OpenMP 5.0 offers many of the same features as SYCL/DPC++ but supports the ISO l
 If you want to program CPUs and GPUs using Fortran, C or pre-modern C++ (i.e. before C++11) using an open industry standard, try OpenMP.
 
 Another alternative to SYCL/DPC++ without the C++ is OpenCL.
-OpenCL is a lot more verbose than SYCL, but if you are a C programmer, you probably like suffering anyways 🤭
+OpenCL is a lot more verbose than SYCL, but if you are a C programmer,
+~~you probably like suffering anyways 🤭~~
+you likely prefer explicit control to syntactic efficiency.
 
 # The tutorial
 
