@@ -41,8 +41,7 @@ int main(int argc, char * argv[])
         const float A(aval);
 
         q.submit([&](sycl::handler& h) {
-            h.parallel_for<class saxpy>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
-                const int i = it[0];
+            h.parallel_for<class saxpy>( sycl::range<1>{length}, [=] (sycl::id<1> i) {
                 Z[i] += A * X[i] + Y[i];
             });
         });
