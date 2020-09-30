@@ -52,9 +52,6 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    sycl::free(X, q);
-    sycl::free(Y, q);
-
     // check for correctness
     size_t errors(0);
     for (size_t i=0; i<length; ++i) {
@@ -70,6 +67,8 @@ int main(int argc, char * argv[])
         return 1;
     }
 
+    sycl::free(X, q);
+    sycl::free(Y, q);
     sycl::free(Z, q);
 
     std::cout << "Program completed without error." << std::endl;

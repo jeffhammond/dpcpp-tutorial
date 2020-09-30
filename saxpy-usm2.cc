@@ -31,24 +31,20 @@ int main(int argc, char * argv[])
 
     sycl::queue q(sycl::default_selector{});
 
-    auto d_X = sycl::malloc_device<float>(length, q);
-    auto d_Y = sycl::malloc_device<float>(length, q);
-    auto d_Z = sycl::malloc_device<float>(length, q);
+    auto X = sycl::malloc_device<float>(length, q);
+    auto Y = sycl::malloc_device<float>(length, q);
+    auto Z = sycl::malloc_device<float>(length, q);
 
     const size_t bytes = length * sizeof(float);
 
-    q.memcpy(d_X, h_X.data(), bytes);
-    q.memcpy(d_Y, h_Y.data(), bytes);
-    q.memcpy(d_Z, h_Z.data(), bytes);
+    q.memcpy(X, h_X.data(), bytes);
+    q.memcpy(Y, h_Y.data(), bytes);
+    q.memcpy(Z, h_Z.data(), bytes);
     q.wait();
 
     try {
 
         const float A(aval);
-
-        auto X = d_X;
-        auto Y = d_Y;
-        auto Z = d_Z;
 
         q.submit([&](sycl::handler& h) {
             h.parallel_for<class saxpy>( sycl::range<1>{length}, [=] (sycl::id<1> i) {
@@ -62,10 +58,7 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    sycl::free(d_X, q);
-    sycl::free(d_Y, q);
-
-    q.memcpy(h_Z.data(), d_Z, bytes);
+    q.memcpy(h_Z.data(), Z, bytes);
     q.wait();
 
     // check for correctness
@@ -83,7 +76,9 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    sycl::free(d_Z, q);
+    sycl::free(X, q);
+    sycl::free(Y, q);
+    sycl::free(Z, q);
 
     std::cout << "Program completed without error." << std::endl;
 
