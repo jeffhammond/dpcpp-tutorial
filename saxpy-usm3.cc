@@ -46,7 +46,7 @@ int main(int argc, char * argv[])
 
         const float A(aval);
 
-        q.parallel_for<class saxpy>( sycl::range<1>{length}, [=] (sycl::id<1> i) {
+        q.parallel_for( sycl::range<1>{length}, [=] (sycl::id<1> i) {
             Z[i] += A * X[i] + Y[i];
         });
         q.wait();

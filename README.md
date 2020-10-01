@@ -262,6 +262,34 @@ the above kernel code can be simplified to the following:
     });
 ```
 
+You can find the complete working examples of both versions of USM in this repo,
+named `saxpy-usm.cc` and `saxpy-usm2.cc`, respectively.
+
+## SYCL 2020 Terse Syntax
+
+Finally, in case you've been wondering why the opaque handler `h` was required
+in each of these programs -- it turns out that it isn't required after all.
+The following is an equivalent implementation, which was added in the
+SYCL 2020 provisional specification.
+Furthermore, we can take advantage of lambda names being optional
+in the SYCL 2020 provisional specification.
+Together, these two small changes make SYCL kernels the same
+length as the original C++ loop listed at the beginning of this tutorial.
+
+```c++
+    q.parallel_for( sycl::range<1>{length}, [=] (sycl::id<1> i) {
+        d_Z[i] += A * d_X[i] + d_Y[i];
+    });
+```
+
+We started with three lines of code that run sequentially on a CPU
+and end with three lines of code that run in parallel on CPUs, GPUs,
+FPGAs, and other devices.
+Obviously, not everything will be as simple as SAXPY, but at least
+now you know that SYCL isn't going to make easy things hard,
+and it builds on a number of modern C++ features and universal
+concepts like "parallel for" rather than introducing new things to learn.
+
 # External resources
 
 * [Khronos SYCL 1.2.1 specification](https://www.khronos.org/registry/SYCL/specs/sycl-1.2.1.pdf)
