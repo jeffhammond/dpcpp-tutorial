@@ -207,6 +207,61 @@ The full program is included in the repo: [saxpy.cc](saxpy.cc).
     }
 ```
 
+## SYCL 2020 Unified Shared Memory (USM)
+
+While the program above is perfectly functional and can be implemented
+across a wide range of platforms, some users will find it rather verbose.
+Furthermore, it's not compatible with libraries and frameworks that need to manage
+memory using pointers.
+To address this issue with SYCL 1.2.1, Intel developed an extension in DPC++
+called Unified Shared Memory (USM) that supports pointer-based memory management.
+
+USM supports two important usage models, both of which will be illustrated below.
+The first one supports automatic data movement between the host and device.
+The second one is for explicit data movement to and from device allocations.
+
+The details are in the SYCL 2020 provisional specification, but to get
+started, all you need to know is below.
+The `q` argument is the queue associated with the device where the
+allocated data will live (either permanently or temporarily).
+
+```c++
+    // shared allocation (can migrate between host and device)
+    auto d_X = sycl::malloc_shared<float>(length, q);
+
+    // device allocation (does not migrate)
+    auto d_X = sycl::malloc_device<float>(length, q);
+
+    // deallocation (works with any allocation type)
+    sycl::free(d_X, q);
+```
+
+If one is using device allocation, data must be moved explicitly,
+for example using the SYCL `memcpy` method, which behaves the
+same way `std::memcpy` does, e.g. the destination is on the left.
+```c++
+    const size_t bytes = length * sizeof(float);
+
+    // d_Z <- h_Z
+    q.memcpy(d_Z, h_Z.data(), bytes);
+    q.wait();
+
+    // h_Z <- d_Z
+    q.memcpy(h_Z.data(), d_Z, bytes);
+    q.wait();
+```
+
+If one uses USM, accessors are no longer required, which means
+the above kernel code can be simplified to the following:
+
+```c++
+    q.submit([&](sycl::handler& h) {
+        h.parallel_for<class saxpy>( sycl::range<1>{length}, [=] (sycl::id<1> i) {
+            d_Z[i] += A * d_X[i] + d_Y[i];
+        });
+    });
+```
+
 # External resources
 
 * [Khronos SYCL 1.2.1 specification](https://www.khronos.org/registry/SYCL/specs/sycl-1.2.1.pdf)
