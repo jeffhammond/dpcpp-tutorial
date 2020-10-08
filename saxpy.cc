@@ -1,11 +1,4 @@
-#include <iostream>
-
-#include <cmath>
-#include <cfloat>
-
-#include "CL/sycl.hpp"
-
-namespace sycl = cl::sycl;
+#include "tutorial.hpp"
 
 const float xval(1);
 const float yval(2);
@@ -41,7 +34,7 @@ int main(int argc, char * argv[])
 
         q.submit([&](sycl::handler& h) {
 
-#if 0
+#if 1
             auto X = d_X.get_access<sycl::access::mode::read>(h);
             auto Y = d_Y.get_access<sycl::access::mode::read>(h);
             auto Z = d_Z.get_access<sycl::access::mode::read_write>(h);
@@ -51,7 +44,8 @@ int main(int argc, char * argv[])
             sycl::accessor Z(d_Z,h,sycl::read_write);
 #endif
 
-            h.parallel_for<class axpy>( sycl::range<1>{length}, [=] (sycl::id<1> i) {
+            h.parallel_for<class axpy>( sycl::range<1>{length}, [=] (sycl::id<1> it) {
+                const size_t i = it[0];
                 Z[i] += A * X[i] + Y[i];
             });
         });

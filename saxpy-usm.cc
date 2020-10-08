@@ -1,11 +1,4 @@
-#include <iostream>
-
-#include <cmath>
-#include <cfloat>
-
-#include "CL/sycl.hpp"
-
-namespace sycl = cl::sycl;
+#include "tutorial.hpp"
 
 const float xval(1);
 const float yval(2);
@@ -26,9 +19,9 @@ int main(int argc, char * argv[])
 
     sycl::queue q(sycl::default_selector{});
 
-    auto X = sycl::malloc_shared<float>(length, q);
-    auto Y = sycl::malloc_shared<float>(length, q);
-    auto Z = sycl::malloc_shared<float>(length, q);
+    auto X = syclx::malloc_shared<float>(length, q);
+    auto Y = syclx::malloc_shared<float>(length, q);
+    auto Z = syclx::malloc_shared<float>(length, q);
 
     for (size_t i=0; i<length; i++) {
       X[i] = xval;
@@ -67,9 +60,9 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    sycl::free(X, q);
-    sycl::free(Y, q);
-    sycl::free(Z, q);
+    syclx::free(X, q);
+    syclx::free(Y, q);
+    syclx::free(Z, q);
 
     std::cout << "Program completed without error." << std::endl;
 
