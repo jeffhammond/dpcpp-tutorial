@@ -1,0 +1,19 @@
+CXX		 = ${HOME}/ISYCL/llvm/build/install/bin/clang++
+
+CXXFLAGS	+= -O3
+CXXFLAGS	+= -std=c++17
+CXXFLAGS	+= -ferror-limit=3
+
+CXXFLAGS	+= -fsycl
+CXXFLAGS	+= -fsycl-unnamed-lambda
+CXXFLAGS	+= -fsycl-targets=nvptx64-nvidia-cuda-sycldevice
+
+all: saxpy.x saxpy-usm.x saxpy-usm2.x saxpy-usm3.x
+
+%.x: %.cc
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+clean:
+	-rm -f *.o
+	-rm -f *.x
+

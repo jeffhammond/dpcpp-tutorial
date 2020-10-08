@@ -1,0 +1,18 @@
+CXX		 = dpcpp
+
+CXXFLAGS	+= -O3
+CXXFLAGS	+= -std=c++17
+CXXFLAGS	+= -ferror-limit=3
+
+CXXFLAGS	+= -fsycl
+CXXFLAGS	+= -fsycl-unnamed-lambda
+
+all: saxpy.x saxpy-usm.x saxpy-usm2.x saxpy-usm3.x
+
+%.x: %.cc
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+clean:
+	-rm -f *.o
+	-rm -f *.x
+
