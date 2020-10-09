@@ -1,4 +1,6 @@
-CXX		 = /media/disk2/jrhammon/llvm/build/bin/clang++
+DPCPP_DIR	 = /media/disk2/jrhammon/llvm/build
+
+CXX		 = $(DPCPP_DIR)/bin/clang++
 
 CXXFLAGS	+= -O3
 CXXFLAGS	+= -std=c++17
@@ -7,6 +9,8 @@ CXXFLAGS	+= -ferror-limit=3
 CXXFLAGS	+= -fsycl
 CXXFLAGS	+= -fsycl-unnamed-lambda
 CXXFLAGS	+= -fsycl-targets=nvptx64-nvidia-cuda-sycldevice
+
+CXXFLAGS	+= -L$(DPCPP_DIR)/lib -Wl,-rpath=$(DPCPP_DIR)/lib
 
 all: saxpy.x saxpy-usm.x saxpy-usm2.x saxpy-usm3.x
 
