@@ -1,4 +1,4 @@
-CXX		 = ${HOME}/ISYCL/llvm/build/install/bin/clang++
+CXX		 = /media/disk2/jrhammon/llvm/build/bin/clang++
 
 CXXFLAGS	+= -O3
 CXXFLAGS	+= -std=c++17
