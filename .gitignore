@@ -31,3 +31,7 @@
 *.out
 *.app
 *.x
+
+# Directories
+range-v3
+triSYCL
