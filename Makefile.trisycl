@@ -1,0 +1,23 @@
+CXX		 = clang++
+
+CXXFLAGS	+= -O3
+CXXFLAGS	+= -std=c++2a
+CXXFLAGS	+= -ferror-limit=3
+
+# run setup-triSYCL.sh
+CXXFLAGS	+= -I./triSYCL/include
+CXXFLAGS	+= -I./range-v3/include
+
+# if 1.74.0 is not correct, run this:
+# brew list --version boost
+CXXFLAGS	+= -I/usr/local/Cellar/boost/1.74.0/include
+
+all: saxpy.x #saxpy-usm.x saxpy-usm2.x saxpy-usm3.x
+
+%.x: %.cc
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+clean:
+	-rm -f *.o
+	-rm -f *.x
+
