@@ -20,7 +20,7 @@ Teaching C++ and parallelism is hard and there is a lot of material out there al
 There is far less information on SYCL itself, and even less about DPC++, so that is our focus.
 
 One of the important C++ concepts used in SYCL is a lambda;
-if you don't know what a lambda is, please see [this introduction](https://raja.readthedocs.io/en/master/tutorial.html#a-little-c-lambda-background).
+if you don't know what a lambda is, please see [this introduction](https://raja.readthedocs.io/en/main/tutorial.html#a-little-c-lambda-background).
 
 SYCL is derived from OpenCL and the execution models are quite similar.
 If you need help understanding the SYCL/OpenCL execution model, please checkout [this overview](https://www.khronos.org/assets/uploads/developers/library/2012-pan-pacific-road-show-June/OpenCL-Details-Taiwan_June-2012.pdf).
