@@ -1,0 +1,20 @@
+CXX		 = ./hipSYCL/bin/syclcc-clang
+
+CXXFLAGS	+= -O3
+CXXFLAGS	+= -std=c++17
+CXXFLAGS	+= -ferror-limit=3
+
+BREW_LLVM	 = /usr/local/Cellar/llvm/11.0.0
+
+CXXFLAGS	+= --hipsycl-platform=cpu
+CXXFLAGS	+= --hipsycl-cpu-cxx=$(BREW_LLVM)/bin/clang++
+
+all: saxpy.x saxpy-usm.x saxpy-usm2.x saxpy-usm3.x
+
+%.x: %.cc
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+clean:
+	-rm -f *.o
+	-rm -f *.x
+
