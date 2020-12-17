@@ -9,6 +9,13 @@ BREW_LLVM	 = /usr/local/Cellar/llvm/11.0.0
 CXXFLAGS	+= --hipsycl-platform=cpu
 CXXFLAGS	+= --hipsycl-cpu-cxx=$(BREW_LLVM)/bin/clang++
 
+# Boost is an undocumented dependency
+CXXFLAGS	+= -I/usr/local/Cellar/boost/1.74.0/include
+
+# These are both disgusting hacks
+CXXFLAGS	+= ./hipSYCL/build/src/runtime/libhipSYCL-rt.dylib
+CXXFLAGS	+= /usr/local/lib/libomp.dylib
+
 all: saxpy.x saxpy-usm.x saxpy-usm2.x saxpy-usm3.x
 
 %.x: %.cc
