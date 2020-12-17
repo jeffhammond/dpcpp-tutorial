@@ -1,4 +1,4 @@
-CXX		 = ./hipSYCL/bin/syclcc-clang
+CXX		 = ./hipSYCL-install/bin/syclcc-clang
 
 CXXFLAGS	+= -O3
 CXXFLAGS	+= -std=c++17
