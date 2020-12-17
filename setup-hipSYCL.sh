@@ -9,7 +9,7 @@ if [ "$INSTALL_PREFIX" = "" ] ; then
     exit
 fi
 
-git clone https://github.com/illuhad/hipSYCL.git && cd hipSYCL
+git clone --depth 1 https://github.com/illuhad/hipSYCL.git && cd hipSYCL
 
 mkdir -p build && cd build
 
